@@ -1,0 +1,65 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "mysql"
+  url = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Users {
+  id String @id @default(uuid())
+  name String
+  last_name String
+  password String
+  email String @unique
+  orders Order[]
+  created_at DateTime @default(now())
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+  name String @unique
+  img String
+  created_at DateTime @default(now())
+  products Product[]
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+  name String @unique
+  price Int
+  category Category @relation(fields: [categoryID], references: [id])
+  categoryID Int
+  stock Int
+  img String
+  orderItems OrderItem[]
+  @@index([categoryID])
+}
+
+model Order {
+  id          Int       @id @default(autoincrement())
+  user        Users     @relation(fields: [userID], references: [id])
+  userID      String
+  status      String
+  total       Int
+  created_at  DateTime  @default(now())
+  orderItems  OrderItem[]
+  @@index([userID])
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  price     Int
+  product   Product  @relation(fields: [productID], references: [id])
+  productID Int
+  order     Order    @relation(fields: [orderID], references: [id])
+  orderID   Int
+  @@index([productID])
+  @@index([orderID])
+}
+
