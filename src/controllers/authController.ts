@@ -1,5 +1,5 @@
 import { User, Decoded, UpdateData } from '../types/utils'
-import { ACCESS_KEY, REFRESH_KEY } from '../config';
+import { ACCESS_KEY, REFRESH_KEY, SUPER_USER } from '../config';
 import jwt from 'jsonwebtoken';
 import { NextFunction, Request, Response} from "express";
 import bcrypt from 'bcrypt'
@@ -85,7 +85,25 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
         jwt.verify(accessToken, ACCESS_KEY, async (err, user) => {
             if(err) return res.status(401).json({error: "ERROR VERIFY TOKEN"})
             if(!user) return res.status(401).json({error: "Unauthorized: Token not valid"})
-            res.locals.user = user as Decoded;
+            res.locals.user = user as Decoded
+            next()
+        })
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+}
+
+export const verifyAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const accessToken = req.headers.authorization?.split(' ')[1];
+
+        if(!accessToken) return res.status(401).json({error: "Unauthorized: Token not provided"})
+
+        jwt.verify(accessToken, ACCESS_KEY, async (err, user) => {
+            if(err) return res.status(401).json({error: "ERROR VERIFY TOKEN"})
+            if(!user) return res.status(401).json({error: "Unauthorized: Token not valid"})
+            if( res.locals.user.email !== SUPER_USER) return res.status(401).json({error: "Unauthorized: Token not valid"})
+            res.locals.user = user as Decoded
             next()
         })
     } catch (error) {
