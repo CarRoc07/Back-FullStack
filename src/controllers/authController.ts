@@ -82,6 +82,12 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
 
         if(!accessToken) return res.status(401).json({error: "Unauthorized: Token not provided"})
 
+        const decodedToken = jwt.decode(accessToken);
+
+        if (decodedToken && typeof decodedToken === 'object' && decodedToken.exp && decodedToken.exp < Date.now() / 1000) {
+            return res.status(401).json({ error: "Unauthorized: Token has expired" });
+        }
+
         jwt.verify(accessToken, ACCESS_KEY, async (err, user) => {
             if(err) return res.status(401).json({error: "ERROR VERIFY TOKEN"})
             if(!user) return res.status(401).json({error: "Unauthorized: Token not valid"})
@@ -99,6 +105,12 @@ export const verifyAdmin = async (req: Request, res: Response, next: NextFunctio
 
         if(!accessToken) return res.status(401).json({error: "Unauthorized: Token not provided"})
 
+        const decodedToken = jwt.decode(accessToken);
+
+        if (decodedToken && typeof decodedToken === 'object' && decodedToken.exp && decodedToken.exp < Date.now() / 1000) {
+            return res.status(401).json({ error: "Unauthorized: Token has expired" });
+        }
+
         jwt.verify(accessToken, ACCESS_KEY, async (err, user) => {
             if(err) return res.status(401).json({error: "ERROR VERIFY TOKEN"})
             if(!user) return res.status(401).json({error: "Unauthorized: Token not valid"})
@@ -115,6 +127,7 @@ export const updateProfileUser = async (req: Request, res: Response) => {
     try {
         const user: Decoded = res.locals.user
         const { newName, newLast_name , newPassword } = req.body;
+        console.log(req.body)
 
         const infoUser = await prisma().users.findFirst({
             where: {
